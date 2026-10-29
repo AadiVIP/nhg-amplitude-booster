@@ -13,6 +13,7 @@ bit-exact in-app test-tone engine for measuring the DSP chain.
 | SDK range | `minSdk 28` (Android 9) → `targetSdk/compileSdk 36` (Android 16) |
 | Network | None. No `INTERNET` permission, no telemetry, no analytics. |
 | Microphone | None. No `RECORD_AUDIO`; the app never captures from a mic. |
+| Licence | Apache-2.0 — see [`LICENSE`](LICENSE) and section 11. |
 
 > **Verification status, stated up front.** The 59 automated tests in this repo
 > are JVM unit tests: they prove the DSP maths and the effect state machine
@@ -29,7 +30,8 @@ bit-exact in-app test-tone engine for measuring the DSP chain.
 
 * **Master boost 0 → +15 dB** (0.5 dB steps, presets at 0 / +6 / +12 dB) applied
   to the global output mix, i.e. the audio Android mixes on its way to the
-  speaker — the same approach commercial volume-booster apps use.
+  speaker — the one session every app's media shares, so no per-app session ID
+  has to be discovered.
 * **Uniform scalar gain only:** `y[n] = g · x[n]`, `g = 10^(gainDb/20)`.
   No EQ, no bass/treble shelf, no pitch shift, no harmonics, no stereo widening,
   no loudness contour, no sample-rate conversion.
@@ -242,17 +244,62 @@ limitations) and section 7 (the manual protocol that has to be run on real
 hardware before any loudness claim can be made). Device-specific probe logs and
 third-party app audits are kept out of this repository on purpose.
 
-## 11. License and attribution
+## 11. Licence and attribution
 
-Copyright © 2026 No Headphone Gamerz (NHG). **All rights reserved** — no open
-source licence has been adopted for this project's own code, so no permission to
-reproduce, modify or redistribute it is granted by this repository.
+Copyright © 2026 No Headphone Gamerz (NHG).
 
-Third-party components used as Gradle dependencies keep their own licences and
-are not re-licensed here: AndroidX / Jetpack Compose / Material 3 (Apache-2.0)
-and JUnit 4 (EPL-1.0). The `android.media.audiofx.*` classes are public Android
-platform APIs used as documented — no Android framework source is included.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+these files except in compliance with the License. You may obtain a copy of the
+License at <http://www.apache.org/licenses/LICENSE-2.0>. Unless required by
+applicable law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
 
-No code, resource or asset in this repository is derived from any other
-volume-boosting application. The session-0 approach was implemented from the
-public Android API surface and the AOSP behaviour cited in section 2.
+The complete licence text is in [`LICENSE`](LICENSE) and covers this repository's
+own Kotlin, XML, Gradle and documentation files.
+
+### Third-party components
+
+Nothing is vendored. Every dependency is resolved from `google()` and
+`mavenCentral()` at build time and keeps its own licence, which this project's
+licence does not override.
+
+| Component | Licence | Where |
+|---|---|---|
+| AndroidX — core, activity, lifecycle, annotation, arch.core, collection, concurrent, emoji2, graphics, interpolator, profileinstaller, savedstate, startup, tracing, versionedparcelable, autofill, customview | Apache-2.0 | runtime dependencies |
+| Jetpack Compose — ui, foundation, material, material3, runtime, animation | Apache-2.0 | runtime dependencies |
+| Kotlin stdlib, kotlinx.coroutines, `org.jetbrains:annotations` | Apache-2.0 | transitive |
+| `com.google.guava:listenablefuture` (stub) | Apache-2.0 | transitive |
+| JUnit 4.13.2 | EPL-1.0 | `testImplementation` only — not shipped in any APK |
+| Gradle wrapper jar | Apache-2.0 | Gradle, Inc. artifact, unmodified |
+
+`android.media.audiofx.*` (`LoudnessEnhancer`, `DynamicsProcessing`,
+`Equalizer`) and the rest of the Android framework are public platform APIs used
+as documented; no Android framework source is included here.
+
+### Provenance
+
+This code was written against the public Android API surface and the AOSP
+behaviour described in section 2. Two external projects served as reference
+points; nothing from either is incorporated:
+
+* **GOODEV Volume Booster** — a third-party commercial app looked at during
+  pre-architecture research purely as a black box: a publicly distributed APK
+  was inspected statically (manifest and effect-chain enumeration) to see what a
+  shipping booster declares. No decompiled code, resource, asset, string or
+  translation from it exists in this repository, and it makes no contribution
+  that could be credited or relicensed.
+* **RootlessJamesDSP** (upstream GPL-3.0; native `libjamesdsp` GPL-2.0-only) —
+  audited to decide whether its capture/replay approach should be adopted. It
+  was not, for the latency and coverage reasons in section 2. Comparing this
+  repository's 2,235 meaningful source lines against that upstream's 207 Kotlin
+  files produced 19 identical lines, all unavoidable Android boilerplate
+  (`override fun onCreate(savedInstanceState: Bundle?) {`,
+  `inner class LocalBinder : Binder() {`, `AudioAttributes.USAGE_MEDIA` builder
+  calls). No upstream file name, class or DSP chain corresponds to anything in
+  `dsp/` or `audio/`. No GPL-licensed code is present, so nothing in this
+  repository carries a copyleft obligation.
+
+The launcher icon is an original hand-authored vector — a speaker-cone path plus
+two stroked arcs — not a template or imported asset.
