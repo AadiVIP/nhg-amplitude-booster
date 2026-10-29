@@ -15,14 +15,18 @@ bit-exact in-app test-tone engine for measuring the DSP chain.
 | Microphone | None. No `RECORD_AUDIO`; the app never captures from a mic. |
 | Licence | Apache-2.0 — see [`LICENSE`](LICENSE) and section 11. |
 
-> **Verification status, stated up front.** The 59 automated tests in this repo
-> are JVM unit tests: they prove the DSP maths and the effect state machine
-> behave as specified. They do **not** prove that a real device amplifies audio.
-> No measurement in this repository establishes an audible, repeatable level
-> change on any specific handset. Whether session-0 attachment succeeds, and how
-> much of the audio it covers, depends on the device and its Android build.
-> Section 7 describes the manual protocol that answers it. Do not treat this app
-> as verified-working on your device until you have run it.
+> **Verification status, stated up front.** On 2026-10-30 the owner manually
+> confirmed on a vivo V25 5G (Android 15, API 35) that turning the boost up
+> really does raise the playback level of audio coming from *other* apps, and
+> that turning it off returns them to normal. The session-0 path therefore works
+> end to end on that handset. Everything else is still a caution, not a claim: it
+> is one device, confirmed by hand rather than with acoustic instrumentation
+> recorded here, and which output actually hosts session 0 is decided by each
+> device's audio policy manager. Behaviour can differ by handset, Android build,
+> vendor audio HAL and current routing. The 59 automated tests in this repo are
+> JVM unit tests — they prove the DSP maths and the effect state machine, never
+> the acoustics. Section 7 is the protocol for checking your own device; do not
+> assume it matches the reference result until you have run it.
 
 ---
 
@@ -113,7 +117,9 @@ The launcher `Activity` is exported (it must be); the service is
   on the output mix can also migrate between threads when the policy changes.
   Consequence: which streams are boosted, and whether boost is audible at all,
   differs by handset, Android version, vendor audio HAL, and even by the current
-  routing state. **Nothing here is claimed to work on any particular device.**
+  routing state. **One handset is confirmed working (vivo V25 5G, Android 15,
+  owner-performed manual test). No other device, and no compatibility list, is
+  claimed.**
 * **Not all audio is necessarily covered.** Whatever the policy routes through
   the affected mix is boosted. Streams on other mixes — and, on some devices,
   calls, alarms or system sounds — may be unaffected. The device's own volume
@@ -157,7 +163,11 @@ The launcher `Activity` is exported (it must be); the service is
 
 ## 7. Manual test protocol (this is what proves it)
 
-1. Install the debug APK (or `adb install -r app/build/outputs/apk/debug/app-debug.apk`).
+1. Install an APK — the release-signed one attached to the GitHub Release, or
+   your own `./gradlew assembleRelease` / `assembleDebug` output
+   (`adb install -r app/build/outputs/apk/release/app-release.apk`). Debug
+   builds carry the `.debug` application ID, so they install *alongside* a
+   release build rather than replacing it.
 2. Start continuous audio in **another** app — music, a video, a game.
 3. Open NHG Amplitude Booster, set gain to **0 dB**, turn **Master Audio Boost**
    on. Status should read `ACTIVE (SESSION 0)` with a bypass note.
@@ -169,6 +179,12 @@ The launcher `Activity` is exported (it must be); the service is
 8. Open **Settings → Device capability audit** if anything fails: it enumerates
    `AudioEffect.queryEffects()` and the session-0 constructor result, including
    the exception text.
+
+**Reference result (2026-10-30).** vivo V25 5G, Android 15 (API 35), run by the
+owner: enabling the master boost increased the playback level of audio coming
+from other apps. Which backend held the session and how completely each stream
+type was covered were not recorded for that run, so those remain open questions
+even on the reference handset.
 
 Record, for any device you report on: handset model, Android/API level, which
 backend became active, and whether the change was audible. Claims of
@@ -282,7 +298,8 @@ git-ignored; this repository publishes **source**, not binaries.
 These are **pure JVM** tests (no Android framework, no device). A green suite
 means the maths and the state machine are correct; it says nothing about whether
 a given firmware lets a third-party app hold the output mix, and nothing about
-acoustic loudness. Run section 7 on your hardware before believing anything.
+acoustic loudness. That second question was answered by hand on one handset
+(section 7) — run it on yours before assuming the same result.
 
 ## 10. Documentation
 
