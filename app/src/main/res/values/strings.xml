@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NHG Amplitude Booster</string>
+    <string name="brand_name">No Headphone Gamerz</string>
+    <string name="service_name">NHG Audio Booster Service</string>
+    <string name="notification_channel_name">NHG Audio Processing</string>
+    <string name="notification_channel_desc">Active audio amplification playback notification</string>
+
+    <!-- Header & Navigation -->
+    <string name="header_brand">NO HEADPHONE GAMERZ</string>
+    <string name="header_title">Amplitude Booster</string>
+    <string name="header_settings_cd">Settings and system diagnostics</string>
+
+    <!-- Main Boost Controls -->
+    <string name="boost_master_switch">Master Audio Boost</string>
+    <string name="boost_master_switch_desc">Global output mix (Session 0)</string>
+    <string name="gain_label">AMPLITUDE GAIN</string>
+    <string name="gain_slider_cd">Adjust boost gain from 0 to 15 decibels</string>
+    <string name="preset_0db">0 dB</string>
+    <string name="preset_0db_sub">Bypass</string>
+    <string name="preset_6db">+6 dB</string>
+    <string name="preset_6db_sub">2.0×</string>
+    <string name="preset_12db">+12 dB</string>
+    <string name="preset_12db_sub">4.0×</string>
+    <string name="action_reset_zero">Reset to 0 dB Baseline</string>
+
+    <!-- Status & Truthfulness -->
+    <string name="status_title">OUTPUT MIX STATUS</string>
+    <string name="status_off">STANDBY</string>
+    <string name="status_starting">INITIALIZING</string>
+    <string name="status_active">ACTIVE (SESSION 0)</string>
+    <string name="status_error">UNAVAILABLE</string>
+    <string name="status_note_global">Processes audio routed through Android\'s master output mix (media, YouTube, music, games). State confirmed via AudioEffect API readback.</string>
+    <string name="warning_high_gain">Caution: High gain (+6 dB or above) may push hardware speakers or DAC amplifiers into acoustic distortion. Listen responsibly.</string>
+
+    <!-- Settings & Diagnostics -->
+    <string name="settings_title">Settings &amp; Diagnostics</string>
+    <string name="settings_close">Close</string>
+    <string name="settings_architecture_title">AUDIO ARCHITECTURE &amp; MECHANISM</string>
+    <string name="settings_architecture_body">Targets Android\'s global output mix (Session 0) using public android.media.audiofx.LoudnessEnhancer, DynamicsProcessing, and Equalizer APIs. Gated by MODIFY_AUDIO_SETTINGS without requiring root or foreign session discovery.</string>
+    <string name="settings_device_title">DEVICE CAPABILITY AUDIT</string>
+    <string name="settings_test_player_title">IN-APP TEST TONE GENERATOR</string>
+    <string name="settings_test_player_desc">Synthesizes calibrated PCM audio directly into AudioTrack with stereo-linked peak limiting (-0.1 dBFS ceiling) for hardware testing.</string>
+    <string name="settings_about_title">ABOUT NHG AMPLITUDE BOOSTER</string>
+    <string name="settings_about_desc">Version 1.0.0 • No Headphone Gamerz (NHG)\nPure uniform scalar amplification: y[n] = g · x[n]. Zero EQ coloration, zero spatial filtering, zero artificial harmonics.</string>
+    <string name="notif_stop">Stop Boost</string>
+</resources>
