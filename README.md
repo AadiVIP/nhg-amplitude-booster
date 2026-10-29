@@ -132,8 +132,9 @@ The launcher `Activity` is exported (it must be); the service is
 * **The `ACTIVE` state means "the framework reports the effect enabled and
   under our control"** — it is API readback, not an acoustic measurement.
 * **Debug builds are signed with the standard Android debug key** and get the
-  `.debug` applicationId suffix; there is no release signing configuration in
-  this repo, so a `release` build is produced unsigned.
+  `.debug` applicationId suffix. Release builds need the private keystore
+  described in section 9; without it `assembleRelease` is unsigned, and no
+  release artefact in this repository is debug-key signed.
 
 ## 6. Safety considerations
 
@@ -176,6 +177,9 @@ compatibility beyond what you measured are not supported by this project.
 ## 8. Repository layout
 
 ```
+LICENSE                                      Apache-2.0 licence text
+app/build.gradle.kts                         SDK levels, versions, release signing wiring
+app/keystore.properties.example              signing parameter template (real file stays outside Git)
 app/src/main/AndroidManifest.xml           permissions, service, FGS types
 app/src/main/kotlin/.../MainActivity.kt    Compose entry point, state wiring
   audio/AmplitudeBoosterService.kt         foreground service, notification, persistence
@@ -201,6 +205,8 @@ so Gradle itself does not need to be installed. Set your SDK path either in
 ```bash
 ./gradlew testDebugUnitTest        # 59 unit tests
 ./gradlew assembleDebug            # app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease          # app/build/outputs/apk/release/app-release.apk
+                                   # signed only if release signing is configured (see below)
 ```
 
 On unusual toolchains (Termux/Android-on-ARM dev boxes, some containers) the
@@ -211,6 +217,49 @@ repo:
 ```bash
 ./gradlew assembleDebug -Pandroid.aapt2FromMavenOverride=/path/to/working/aapt2
 ```
+
+### Release signing
+
+Release builds use a real private key. The signing parameters are read at
+configuration time from a properties file, first match wins:
+`NHG_RELEASE_SIGNING_PROPERTIES`, then `-Pnhg.release.signingProperties=…`, then
+a git-ignored `app/keystore.properties`. [`app/keystore.properties.example`](app/keystore.properties.example)
+lists the four keys (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`).
+If none resolves, the build prints "release signing: NOT configured" and
+`assembleRelease` yields an **unsigned** APK — it never quietly falls back to the
+debug key.
+
+The keystore and the properties file belong outside the working tree, with `0600`
+permissions. `*.jks`, `*.keystore`, `*.p12`, `*.pem` and `keystore.properties`
+are all git-ignored. Create the key once, keeping the passwords off the command
+line and out of shell history — `keytool` reads them from files:
+
+```bash
+mkdir -p ~/.nhg-release && chmod 700 ~/.nhg-release
+# write both passwords into separate 0600 files with an editor, then:
+keytool -genkeypair -v \
+  -keystore ~/.nhg-release/nhg-release.p12 -storetype PKCS12 \
+  -keyalg RSA -keysize 4096 -validity 9125 \
+  -alias nhg-release \
+  -dname "CN=NHG Amplitude Booster, OU=Release, O=No Headphone Gamerz" \
+  -storepass:file ~/.nhg-release/store.pass -keypass:file ~/.nhg-release/key.pass
+shred -u ~/.nhg-release/store.pass ~/.nhg-release/key.pass   # or delete them
+```
+
+Then check who signed a built APK before publishing it:
+
+```bash
+apksigner verify --print-certs --verbose app/build/outputs/apk/release/app-release.apk
+aapt2 dump badging app/build/outputs/apk/release/app-release.apk | head -2
+```
+
+**Back the keystore and both passwords up somewhere that survives a lost phone
+or a rebuilt machine.** The signing certificate *is* the app's identity to
+Android: if it is lost, no update can be installed over an existing install —
+every user would have to uninstall and reinstall, because Android rejects an APK
+whose signer differs. Recovery is impossible after the fact, so treat the key as
+more important than the source. Use a strong random password; the key file alone
+is worthless without it, and the pair together must never be committed.
 
 APKs, `build/` output, `local.properties`, IDE files and Gradle caches are
 git-ignored; this repository publishes **source**, not binaries.
