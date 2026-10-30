@@ -234,6 +234,14 @@ repo:
 ./gradlew assembleDebug -Pandroid.aapt2FromMavenOverride=/path/to/working/aapt2
 ```
 
+On that same ARM toolchain AGP's resource optimizer has been observed to report
+success while writing no resources package at all, which yields an APK with no
+`AndroidManifest.xml` and no `resources.arsc` — still a green build. That is why
+`gradle.properties` sets `android.enableResourceOptimizations=false`; the app
+does not shrink resources, so nothing is lost. Treat `BUILD SUCCESSFUL` as a
+claim to check, not a result: verify any APK you publish with the commands in
+the release-signing section below.
+
 ### Release signing
 
 Release builds use a real private key. The signing parameters are read at
